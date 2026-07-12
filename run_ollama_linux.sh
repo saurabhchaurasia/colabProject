@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+MODEL="${MODEL:-qwen3.6:27b}"
+CONTEXT_SIZE="${CONTEXT_SIZE:-32000}"
+OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
+
+if ! command -v zstd >/dev/null 2>&1; then
+  echo "Installing zstd..."
+  sudo apt-get update
+  sudo apt-get install -y zstd
+fi
+
+if ! command -v ollama >/dev/null 2>&1; then
+  echo "Installing Ollama..."
+  curl -fsSL https://ollama.com/install.sh | sh
+fi
+
+if ! command -v cloudflared >/dev/null 2>&1; then
+  echo "Downloading cloudflared..."
+  curl -fsSL -o cloudflared-linux-amd64 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+  chmod +x cloudflared-linux-amd64
+fi
+
+export OLLAMA_CONTEXT_LENGTH="$CONTEXT_SIZE"
+export OLLAMA_KEEP_ALIVE="-1"
+
+if pgrep -f "ollama serve" >/dev/null 2>&1; then
+  echo "Stopping existing Ollama server..."
+  pkill -f "ollama serve" || true
+fi
+
+nohup ollama serve >/tmp/ollama-serve.log 2>&1 &
+
+for _ in {1..30}; do
+  if curl -fsS "http://${OLLAMA_HOST}/api/tags" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+
+ollama pull "$MODEL"
+echo "Model '${MODEL}' pulled successfully."
+
+echo "Testing model..."
+ollama run "$MODEL" "Say Hey!"
+
+if command -v cloudflared >/dev/null 2>&1; then
+  echo "Starting Cloudflare tunnel..."
+  pkill -9 -f cloudflared || true
+  nohup ./cloudflared-linux-amd64 tunnel --url "http://${OLLAMA_HOST}" --http-host-header "${OLLAMA_HOST}" >/tmp/cloudflared.log 2>&1 &
+  sleep 2
+  grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' /tmp/cloudflared.log | tail -n 1 || true
+fi
+
+ollama ps
