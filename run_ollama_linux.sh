@@ -18,11 +18,9 @@ if ! command -v ollama >/dev/null 2>&1; then
   curl -fsSL https://ollama.com/install.sh | sh
 fi
 
-if ! command -v cloudflared >/dev/null 2>&1; then
-  echo "Downloading cloudflared..."
-  curl -fsSL -o "${SCRIPT_DIR}/cloudflared-linux-amd64" https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
-  chmod +x "${SCRIPT_DIR}/cloudflared-linux-amd64"
-fi
+echo "Downloading cloudflared..."
+curl -fsSL -o "${SCRIPT_DIR}/cloudflared-linux-amd64" https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+chmod +x "${SCRIPT_DIR}/cloudflared-linux-amd64"
 
 export OLLAMA_CONTEXT_LENGTH="$CONTEXT_SIZE"
 export OLLAMA_KEEP_ALIVE="-1"
