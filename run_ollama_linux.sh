@@ -48,10 +48,21 @@ ollama run "$MODEL" "Say Hey!"
 if command -v cloudflared >/dev/null 2>&1; then
   echo "Starting Cloudflare tunnel..."
   pkill -9 -f cloudflared || true
-  ./cloudflared-linux-amd64 tunnel --url "http://${OLLAMA_HOST}" --http-host-header "${OLLAMA_HOST}" 2>&1 |
-    tee /tmp/cloudflared.log |
-    grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' |
-    head -n 1
+  : > /tmp/cloudflared.log
+  ./cloudflared-linux-amd64 tunnel --url "http://${OLLAMA_HOST}" --http-host-header "${OLLAMA_HOST}" >/tmp/cloudflared.log 2>&1 &
+  cloudflared_pid=$!
+
+  for _ in {1..30}; do
+    tunnel_url=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' /tmp/cloudflared.log | head -n 1 || true)
+    if [ -n "${tunnel_url}" ]; then
+      echo "${tunnel_url}"
+      break
+    fi
+    if ! kill -0 "${cloudflared_pid}" >/dev/null 2>&1; then
+      break
+    fi
+    sleep 1
+  done
 fi
 
 ollama ps
