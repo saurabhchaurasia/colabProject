@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 MODEL="${MODEL:-qwen3.5:9b}"
 CONTEXT_SIZE="${CONTEXT_SIZE:-32000}"
 OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
@@ -18,8 +20,8 @@ fi
 
 if ! command -v cloudflared >/dev/null 2>&1; then
   echo "Downloading cloudflared..."
-  curl -fsSL -o cloudflared-linux-amd64 https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
-  chmod +x cloudflared-linux-amd64
+  curl -fsSL -o "${SCRIPT_DIR}/cloudflared-linux-amd64" https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+  chmod +x "${SCRIPT_DIR}/cloudflared-linux-amd64"
 fi
 
 export OLLAMA_CONTEXT_LENGTH="$CONTEXT_SIZE"
@@ -49,7 +51,7 @@ if command -v cloudflared >/dev/null 2>&1; then
   echo "Starting Cloudflare tunnel..."
   pkill -9 -f cloudflared || true
   : > /tmp/cloudflared.log
-  ./cloudflared-linux-amd64 tunnel --url "http://${OLLAMA_HOST}" --http-host-header "${OLLAMA_HOST}" >/tmp/cloudflared.log 2>&1 &
+  "${SCRIPT_DIR}/cloudflared-linux-amd64" tunnel --url "http://${OLLAMA_HOST}" --http-host-header "${OLLAMA_HOST}" >/tmp/cloudflared.log 2>&1 &
   cloudflared_pid=$!
 
   tunnel_url=""
