@@ -3,7 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-MODEL="${MODEL:-Qwen/Qwen2.5-7B-Instruct}"
+MODEL="${MODEL:-AxionML/Qwen3.5-9B-NVFP4}"
+QUANTIZATION="${QUANTIZATION:-nvfp4}"
+EXTRA_VLLM_ARGS="${EXTRA_VLLM_ARGS:-}"
 HOST="${HOST:-127.0.0.1}"
 PORT="${PORT:-8000}"
 TUNNEL_BIN="${TUNNEL_BIN:-cloudflared}"
@@ -36,11 +38,18 @@ if pgrep -f "vllm.entrypoints.openai.api_server" >/dev/null 2>&1; then
   pkill -f "vllm.entrypoints.openai.api_server" || true
 fi
 
-nohup python3 -m vllm.entrypoints.openai.api_server \
-  --model "$MODEL" \
-  --host "$HOST" \
-  --port "$PORT" \
-  >/tmp/vllm-server.log 2>&1 &
+server_cmd=(python3 -m vllm.entrypoints.openai.api_server --model "$MODEL" --host "$HOST" --port "$PORT")
+
+if [ -n "$QUANTIZATION" ]; then
+  server_cmd+=(--quantization "$QUANTIZATION")
+fi
+
+if [ -n "$EXTRA_VLLM_ARGS" ]; then
+  # shellcheck disable=SC2206
+  server_cmd+=($EXTRA_VLLM_ARGS)
+fi
+
+nohup "${server_cmd[@]}" >/tmp/vllm-server.log 2>&1 &
 
 server_pid=$!
 server_url="http://${HOST}:${PORT}"
