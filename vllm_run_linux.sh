@@ -15,15 +15,20 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! command -v pip3 >/dev/null 2>&1; then
-  echo "pip3 is required but was not found on PATH."
+if ! command -v curl >/dev/null 2>&1; then
+  echo "curl is required but was not found on PATH."
   exit 1
 fi
 
+if ! command -v uv >/dev/null 2>&1; then
+  echo "Installing uv..."
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+
 if ! python3 -c "import vllm" >/dev/null 2>&1; then
-  echo "Installing vLLM..."
-  python3 -m pip install --upgrade pip
-  python3 -m pip install vllm
+  echo "Installing vLLM with uv..."
+  uv pip install --system vllm
 fi
 
 if ! command -v "$TUNNEL_BIN" >/dev/null 2>&1; then
