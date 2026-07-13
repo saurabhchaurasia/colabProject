@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-MODEL="${MODEL:-qwen3.6:27b}"
+MODEL="${MODEL:-hf.co/Jackrong/Qwopus3.5-4B-v3-MTP-GGUF:Q4_K_M}"
 CONTEXT_SIZE="${CONTEXT_SIZE:-32000}"
 OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
 
