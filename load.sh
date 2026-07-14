@@ -49,4 +49,4 @@ cd ColabProject
 chmod +x ollama_run_linux.sh
 
 # auto run ollama_run_linux.sh
-# bash ollama_run_linux.sh
+bash ollama_run_linux.sh

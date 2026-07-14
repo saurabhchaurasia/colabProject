@@ -70,4 +70,5 @@ if command -v cloudflared >/dev/null 2>&1; then
   fi
 fi
 
+echo "ollama ps"
 ollama ps
