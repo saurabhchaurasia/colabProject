@@ -38,8 +38,8 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "Downloading cloudflared..."
-curl -fsSL -o "${SCRIPT_DIR}/cloudflared-linux-amd64" https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
-chmod +x "${SCRIPT_DIR}/cloudflared-linux-amd64"
+curl -fsSL -o "cloudflared-linux-amd64" https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+chmod +x "cloudflared-linux-amd64"
 
 # download repo
 if [ ! -d "ColabProject" ]; then
