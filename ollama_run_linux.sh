@@ -3,7 +3,7 @@ set -euo pipefail
 
 # unsloth/Qwen3.5-0.8B-MTP-GGUF
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MODEL="${MODEL:-hf.co/unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M}"
+MODEL="${MODEL:-hf.co/unsloth/Qwen3.5-27B-MTP-GGUF:Q5_K_M}"
 CONTEXT_SIZE="${CONTEXT_SIZE:-32000}"
 OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
 
@@ -27,6 +27,7 @@ if command -v cloudflared >/dev/null 2>&1; then
   for _ in {1..20}; do
     tunnel_url=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' /tmp/cloudflared.log | head -n 1 || true)
     if [ -n "${tunnel_url}" ]; then
+      echo "================================"
       echo "${tunnel_url}"
       break
     fi
@@ -42,5 +43,7 @@ if command -v cloudflared >/dev/null 2>&1; then
   fi
 fi
 
+echo "================================"
 echo "ollama ps"
 ollama ps
+echo "================================"
