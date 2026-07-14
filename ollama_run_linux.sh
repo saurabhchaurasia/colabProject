@@ -48,7 +48,7 @@ if command -v cloudflared >/dev/null 2>&1; then
   echo "Starting Cloudflare tunnel..."
   pkill -9 -f cloudflared || true
   : > /tmp/cloudflared.log
-  "${SCRIPT_DIR}/cloudflared-linux-amd64" tunnel --url "http://${OLLAMA_HOST}" --http-host-header "${OLLAMA_HOST}" >/tmp/cloudflared.log 2>&1 &
+  "${SCRIPT_DIR}/../cloudflared-linux-amd64" tunnel --url "http://${OLLAMA_HOST}" --http-host-header "${OLLAMA_HOST}" >/tmp/cloudflared.log 2>&1 &
   cloudflared_pid=$!
 
   tunnel_url=""
