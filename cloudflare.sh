@@ -22,6 +22,7 @@ for _ in {1..20}; do
   if [ -n "${tunnel_url}" ]; then
     echo "================================"
     echo "${tunnel_url}"
+    echo "================================"
     break
   fi
   if ! kill -0 "${cloudflared_pid}" >/dev/null 2>&1; then
@@ -31,6 +32,9 @@ for _ in {1..20}; do
 done
 
 if [ -z "${tunnel_url}" ]; then
+  echo "================================"
   echo "Cloudflare tunnel URL was not printed. Last log lines:"
   tail -n 20 /tmp/cloudflared.log || true
+  echo "================================"
+  
 fi
