@@ -34,19 +34,12 @@ for _ in {1..30}; do
   sleep 1
 done
 
-# download cloudflared
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-echo "Downloading cloudflared..."
-curl -fsSL -o "cloudflared-linux-amd64" https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
-chmod +x "cloudflared-linux-amd64"
-
 # download repo
 if [ ! -d "ColabProject" ]; then
   git clone https://github.com/saurabhchaurasia/ColabProject.git
 fi
 cd ColabProject
-chmod +x ollama_run_linux.sh
+chmod +x ollama_run_linux.sh cloudflare.sh
 
 # auto run ollama_run_linux.sh
 bash ollama_run_linux.sh

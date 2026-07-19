@@ -17,34 +17,9 @@ echo "Model '${MODEL}' pulled successfully."
 echo "Testing model..."
 ollama run "$MODEL" "Just respond Hi for sanity check."
 
-if command -v cloudflared >/dev/null 2>&1; then
-  echo "Starting Cloudflare tunnel..."
-  pkill -9 -f cloudflared || true
-  : > /tmp/cloudflared.log
-  "${SCRIPT_DIR}/../cloudflared-linux-amd64" tunnel --url "http://${OLLAMA_HOST}" --http-host-header "${OLLAMA_HOST}" >/tmp/cloudflared.log 2>&1 &
-  cloudflared_pid=$!
-
-  tunnel_url=""
-  for _ in {1..20}; do
-    tunnel_url=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' /tmp/cloudflared.log | head -n 1 || true)
-    if [ -n "${tunnel_url}" ]; then
-      echo "================================"
-      echo "${tunnel_url}"
-      break
-    fi
-    if ! kill -0 "${cloudflared_pid}" >/dev/null 2>&1; then
-      break
-    fi
-    sleep 1
-  done
-
-  if [ -z "${tunnel_url}" ]; then
-    echo "Cloudflare tunnel URL was not printed. Last log lines:"
-    tail -n 20 /tmp/cloudflared.log || true
-  fi
-fi
-
 echo "================================"
 echo "ollama ps"
 ollama ps
 echo "================================"
+
+bash cloudflare.sh
