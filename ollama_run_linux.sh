@@ -12,8 +12,8 @@ export OLLAMA_KEEP_ALIVE="-1"
 ollama pull "hf.co/${MODEL}"
 echo "Model '${MODEL}' pulled successfully."
 
-echo "Testing model..."
-ollama run "hf.co/${MODEL}" "Hi"
+# echo "Testing model..."
+# ollama run "hf.co/${MODEL}" "Hi"
 
 echo "================================"
 echo "ollama ps"
