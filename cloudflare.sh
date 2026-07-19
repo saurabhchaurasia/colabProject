@@ -10,7 +10,7 @@ if [ ! -x "${CLOUDFLARED_BIN}" ]; then
   chmod +x "${CLOUDFLARED_BIN}"
 fi
 
-echo "Starting Cloudflare tunnel..."
+echo "****Starting Cloudflare tunnel..."
 pkill -9 -f cloudflared || true
 : > /tmp/cloudflared.log
 "${CLOUDFLARED_BIN}" tunnel --url "http://${OLLAMA_HOST}" --http-host-header "${OLLAMA_HOST}" >/tmp/cloudflared.log 2>&1 &
@@ -21,7 +21,7 @@ for _ in {1..20}; do
   tunnel_url=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' /tmp/cloudflared.log | head -n 1 || true)
   if [ -n "${tunnel_url}" ]; then
     echo "================================"
-    echo "${tunnel_url}"
+    echo "**** ${tunnel_url}"
     echo "================================"
     break
   fi
@@ -33,7 +33,7 @@ done
 
 if [ -z "${tunnel_url}" ]; then
   echo "================================"
-  echo "Cloudflare tunnel URL was not printed. Last log lines:"
+  echo "****Cloudflare tunnel URL was not printed. Last log lines:"
   tail -n 20 /tmp/cloudflared.log || true
   echo "================================"
   
