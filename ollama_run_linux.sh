@@ -13,7 +13,7 @@ ollama pull "$MODEL"
 echo "Model '${MODEL}' pulled successfully."
 
 echo "Testing model..."
-ollama run "$MODEL" "Just respond Hi for sanity check."
+ollama run "$MODEL" "Hi"
 
 echo "================================"
 echo "ollama ps"
