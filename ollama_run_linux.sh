@@ -19,5 +19,3 @@ echo "================================"
 echo "ollama ps"
 ollama ps
 echo "================================"
-
-bash cloudflare.sh

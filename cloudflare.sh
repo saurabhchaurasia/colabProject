@@ -2,7 +2,7 @@
 set -euo pipefail
 
 OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
-CLOUDFLARED_BIN="cloudflared-linux-amd64"
+CLOUDFLARED_BIN="./cloudflared-linux-amd64"
 
 if [ ! -x "${CLOUDFLARED_BIN}" ]; then
   echo "Downloading cloudflared..."
