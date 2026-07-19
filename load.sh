@@ -42,11 +42,11 @@ cd colabProject
 chmod +x ollama_run_linux.sh cloudflare.sh
 
 # auto run ollama_run_linux.sh and cloudflare.sh in parallel
+bash cloudflare.sh & 
+cloudflare_pid=$!
+
 bash ollama_run_linux.sh & 
 ollama_pid=$!
 
-bash cloudflare.sh &
-cloudflare_pid=$!
-
-wait "${ollama_pid}"
 wait "${cloudflare_pid}"
+wait "${ollama_pid}"
