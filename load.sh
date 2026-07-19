@@ -35,10 +35,10 @@ for _ in {1..30}; do
 done
 
 # download repo
-if [ ! -d "ColabProject" ]; then
-  git clone https://github.com/saurabhchaurasia/ColabProject.git
+if [ ! -d "colabProject" ]; then
+  git clone https://github.com/saurabhchaurasia/colabProject.git
 fi
-cd ColabProject
+cd colabProject
 chmod +x ollama_run_linux.sh cloudflare.sh
 
 # auto run ollama_run_linux.sh
