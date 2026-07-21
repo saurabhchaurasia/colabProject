@@ -21,7 +21,7 @@ for _ in {1..20}; do
   tunnel_url=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' /tmp/cloudflared.log | head -n 1 || true)
   if [ -n "${tunnel_url}" ]; then
     echo "================================"
-    echo "**** ${tunnel_url}"
+    echo "tunnel_link ${tunnel_url}"
     echo "================================"
     break
   fi
