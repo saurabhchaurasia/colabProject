@@ -9,7 +9,7 @@ ollama pull "hf.co/${MODEL}"
 echo "Model '${MODEL}' pulled successfully."
 
 echo "Testing model..."
-ollama run "hf.co/${MODEL}" "Hi"
+ollama run "hf.co/${MODEL}" "Say hey for sanity check."
 
 echo "================================"
 echo "ollama ps"
