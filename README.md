@@ -47,8 +47,10 @@ CONTEXT_SIZE=120000 MODEL="unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M" \
 ## Automatic setup and benchmark
 
 On Debian/Ubuntu Linux, `load2.sh` installs missing `curl`, `python3`, and
-`zstd` packages, installs Ollama if needed, starts or reuses its server, and
-then runs the context benchmark. Package installation requires root or `sudo`.
+`zstd` packages, installs `git` if a clone is needed, installs Ollama if needed,
+starts or reuses its server, and then runs the context benchmark. If the
+benchmark script is not beside `load2.sh`, it clones this repository into
+`/workspace/colabProject`. Package installation requires root or `sudo`.
 
 ```bash
 bash load2.sh

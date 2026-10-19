@@ -2,24 +2,40 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-BENCHMARK_SCRIPT="${SCRIPT_DIR}/benchmark_model.py"
+REPO_DIR="/workspace/colabProject"
+NEED_CLONE=false
 export OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
 
-if [[ ! -f "${BENCHMARK_SCRIPT}" ]]; then
-  echo "Benchmark script not found: ${BENCHMARK_SCRIPT}" >&2
+if [[ -f "${SCRIPT_DIR}/benchmark_model.py" ]]; then
+  BENCHMARK_SCRIPT="${SCRIPT_DIR}/benchmark_model.py"
+elif [[ -f "${REPO_DIR}/benchmark_model.py" ]]; then
+  SCRIPT_DIR="${REPO_DIR}"
+  BENCHMARK_SCRIPT="${SCRIPT_DIR}/benchmark_model.py"
+else
+  NEED_CLONE=true
+  BENCHMARK_SCRIPT="${REPO_DIR}/benchmark_model.py"
+fi
+
+if [[ "${NEED_CLONE}" == true && -e "${REPO_DIR}" ]]; then
+  echo "Cannot clone repository: ${REPO_DIR} already exists without benchmark_model.py." >&2
   exit 1
 fi
 
-missing_packages=()
-for command_name in curl python3 zstd; do
-  if ! command -v "${command_name}" >/dev/null 2>&1; then
-    missing_packages+=("${command_name}")
+missing_packages=(curl python3 zstd)
+if [[ "${NEED_CLONE}" == true ]] && ! command -v git >/dev/null 2>&1; then
+  missing_packages+=(git)
+fi
+
+packages_to_install=()
+for package in "${missing_packages[@]}"; do
+  if ! command -v "${package}" >/dev/null 2>&1; then
+    packages_to_install+=("${package}")
   fi
 done
 
-if (( ${#missing_packages[@]} > 0 )); then
+if (( ${#packages_to_install[@]} > 0 )); then
   if ! command -v apt-get >/dev/null 2>&1; then
-    echo "Missing prerequisites (${missing_packages[*]}) and apt-get is unavailable." >&2
+    echo "Missing prerequisites (${packages_to_install[*]}) and apt-get is unavailable." >&2
     exit 1
   fi
 
@@ -32,9 +48,17 @@ if (( ${#missing_packages[@]} > 0 )); then
     exit 1
   fi
 
-  echo "Installing prerequisites: ${missing_packages[*]}"
+  echo "Installing prerequisites: ${packages_to_install[*]}"
   "${apt_command[@]}" update
-  "${apt_command[@]}" install -y "${missing_packages[@]}"
+  "${apt_command[@]}" install -y "${packages_to_install[@]}"
+fi
+
+if [[ "${NEED_CLONE}" == true ]]; then
+  mkdir -p "$(dirname -- "${REPO_DIR}")"
+  echo "Cloning benchmark repository..."
+  git clone https://github.com/saurabhchaurasia/colabProject.git "${REPO_DIR}"
+  SCRIPT_DIR="${REPO_DIR}"
+  BENCHMARK_SCRIPT="${SCRIPT_DIR}/benchmark_model.py"
 fi
 
 if ! command -v ollama >/dev/null 2>&1; then
