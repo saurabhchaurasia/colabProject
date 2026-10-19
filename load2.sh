@@ -56,6 +56,10 @@ if [[ "${NEED_CLONE}" == true ]]; then
   SCRIPT_DIR="${REPO_DIR}"
 fi
 
+source "${SCRIPT_DIR}/env.sh"
+load_project_env "${SCRIPT_DIR}/.env"
+export OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
+
 if [[ ! -f "${SCRIPT_DIR}/test.sh" ]]; then
   echo "Test script not found: ${SCRIPT_DIR}/test.sh" >&2
   exit 1

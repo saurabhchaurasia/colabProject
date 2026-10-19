@@ -2,9 +2,12 @@
 import json
 import math
 import os
+import re
+import shlex
 import shutil
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -15,9 +18,44 @@ CONTEXT_SIZE = int(os.environ.get("CONTEXT_SIZE", "120000"))
 NUM_PREDICT = min(4096, max(1, CONTEXT_SIZE // 10))
 BASELINE_NUM_PREDICT = min(64, NUM_PREDICT)
 CALIBRATION_NUM_PREDICT = 1
-CHECKPOINTS = (25, 50, 75, 90)
+CHECKPOINTS = (10, 25, 50, 75, 90)
 MAX_CALIBRATION_ATTEMPTS = 4
 REQUEST_TIMEOUT = 3600
+
+
+def load_environment():
+    env_file = os.path.join(os.path.dirname(__file__), ".env")
+    try:
+        with open(env_file, encoding="utf-8") as env_stream:
+            lines = env_stream.readlines()
+    except FileNotFoundError:
+        return
+
+    for line_number, raw_line in enumerate(lines, start=1):
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[len("export ") :]
+
+        key, separator, raw_value = line.partition("=")
+        key = key.strip()
+        if not separator or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
+            raise ValueError(f"Invalid .env entry at {env_file}:{line_number}.")
+        try:
+            values = shlex.split(raw_value, comments=True)
+        except ValueError as exc:
+            raise ValueError(
+                f"Invalid .env value at {env_file}:{line_number}."
+            ) from exc
+        if len(values) > 1:
+            raise ValueError(
+                f"Quote values containing spaces in {env_file}:{line_number}."
+            )
+        os.environ.setdefault(key, values[0] if values else "")
+
+
+load_environment()
 
 
 def ollama_model_name(model_ref):
@@ -220,6 +258,7 @@ def run_checkpoint(model, history, target_percent, current_tokens):
 
 
 def main():
+    benchmark_started_at = time.perf_counter()
     if CONTEXT_SIZE <= 0:
         raise SystemExit("CONTEXT_SIZE must be a positive integer.")
     if not MODEL:
@@ -294,6 +333,8 @@ def main():
     print(result_table_header())
     for result_row in results:
         print(format_result_row(*result_row))
+    elapsed_ns = int((time.perf_counter() - benchmark_started_at) * 1_000_000_000)
+    print(f"Total benchmark time: {format_duration(elapsed_ns)}")
 
 
 if __name__ == "__main__":

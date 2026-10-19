@@ -1,9 +1,13 @@
 #!/bin/bash
 
-#
-cd /workspace/
 # Cause the script to exit on failure.
 set -eo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/env.sh"
+load_project_env "${SCRIPT_DIR}/.env"
+
+cd /workspace/
 
 # download ollama
 if ! command -v zstd >/dev/null 2>&1; then

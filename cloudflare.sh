@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/env.sh"
+load_project_env "${SCRIPT_DIR}/.env"
+
 OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
 CLOUDFLARED_BIN="./cloudflared-linux-amd64"
 
