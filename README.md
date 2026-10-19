@@ -26,13 +26,12 @@ and 90% context checkpoints. With the default 120,000-token context, those
 checkpoints are 30,000, 60,000, 90,000, and 108,000 tokens. The final table
 reports actual context fill, prompt tokens, prefill time and tokens per second,
 generated tokens, and decode time and tokens per second. Checkpoint replies are
-streamed to an interactive terminal in a rolling five-line window and capped at
-4,096 tokens by default; the model may generate fewer. When output is redirected
-or non-interactive, only the final five lines are printed after generation. The
-script requests visible answer text rather than a separate reasoning trace. It
-prints the baseline and each checkpoint's metrics immediately, then prints a
-final table with all results. Calibration requests use a one-token output cap
-to avoid repeatedly generating long responses while adjusting context size.
+streamed to the terminal as they arrive and capped at 4,096 tokens by default;
+the model may generate fewer. The script requests visible answer text rather
+than a separate reasoning trace. It prints the baseline and each checkpoint's
+metrics immediately, then prints a final table with all results. Calibration
+requests use a one-token output cap to avoid repeatedly generating long
+responses while adjusting context size.
 
 ```bash
 python3 benchmark_model.py

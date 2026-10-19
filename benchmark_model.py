@@ -7,7 +7,6 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
-from collections import deque
 
 
 MODEL = os.environ.get("MODEL", "unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M")
@@ -19,49 +18,6 @@ CALIBRATION_NUM_PREDICT = 1
 CHECKPOINTS = (25, 50, 75, 90)
 MAX_CALIBRATION_ATTEMPTS = 4
 REQUEST_TIMEOUT = 3600
-
-
-class LiveTokenWindow:
-    max_lines = 5
-
-    def __init__(self):
-        terminal_width = shutil.get_terminal_size(fallback=(80, 24)).columns
-        self.width = max(1, terminal_width - 1)
-        self.is_terminal = sys.stdout.isatty()
-        self.lines = deque([""], maxlen=self.max_lines)
-        self.started = False
-
-    def write(self, text):
-        if not text:
-            return
-        if not self.started:
-            self.started = True
-            if self.is_terminal:
-                sys.stdout.write("\n" * self.max_lines)
-
-        for character in text:
-            if character == "\r":
-                continue
-            if character == "\n" or len(self.lines[-1]) >= self.width:
-                self.lines.append("")
-                if character == "\n":
-                    continue
-            self.lines[-1] += character
-
-        if self.is_terminal:
-            sys.stdout.write(f"\033[{self.max_lines}A")
-            for line in self.lines:
-                sys.stdout.write(f"\r\033[2K{line}\n")
-        sys.stdout.flush()
-
-    def finish(self):
-        if not self.started:
-            return
-        if self.is_terminal:
-            sys.stdout.write("\n")
-        else:
-            sys.stdout.write("\n".join(self.lines) + "\n")
-        sys.stdout.flush()
 
 
 def ollama_model_name(model_ref):
@@ -112,7 +68,6 @@ def chat(model, messages, num_predict, stream=False):
                 return json.loads(response.read().decode("utf-8"))
 
             chunks = []
-            live_window = LiveTokenWindow()
             final_result = None
             saw_thinking = False
             for line in response:
@@ -123,14 +78,14 @@ def chat(model, messages, num_predict, stream=False):
                 saw_thinking = saw_thinking or bool(message.get("thinking"))
                 text = message.get("content", "")
                 if text:
-                    live_window.write(text)
+                    sys.stdout.write(text)
+                    sys.stdout.flush()
                     chunks.append(text)
                 if chunk.get("done"):
                     final_result = chunk
 
             if final_result is None:
                 raise RuntimeError("Ollama stream ended without a final response.")
-            live_window.finish()
             if not chunks:
                 detail = (
                     "Ollama streamed no visible answer text. "
