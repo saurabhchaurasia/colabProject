@@ -12,17 +12,6 @@ import urllib.error
 import urllib.request
 
 
-MODEL = os.environ.get("MODEL", "unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M")
-OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "127.0.0.1:11434").rstrip("/")
-CONTEXT_SIZE = int(os.environ.get("CONTEXT_SIZE", "120000"))
-NUM_PREDICT = min(4096, max(1, CONTEXT_SIZE // 10))
-BASELINE_NUM_PREDICT = min(64, NUM_PREDICT)
-CALIBRATION_NUM_PREDICT = 1
-CHECKPOINTS = (10, 25, 50, 75, 90)
-MAX_CALIBRATION_ATTEMPTS = 4
-REQUEST_TIMEOUT = 3600
-
-
 def load_environment():
     env_file = os.path.join(os.path.dirname(__file__), ".env")
     try:
@@ -56,6 +45,16 @@ def load_environment():
 
 
 load_environment()
+
+MODEL = os.environ.get("MODEL", "unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M")
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "127.0.0.1:11434").rstrip("/")
+CONTEXT_SIZE = int(os.environ.get("CONTEXT_SIZE", "120000"))
+NUM_PREDICT = min(4096, max(1, CONTEXT_SIZE // 10))
+BASELINE_NUM_PREDICT = min(64, NUM_PREDICT)
+CALIBRATION_NUM_PREDICT = 1
+CHECKPOINTS = (10, 25, 50, 75, 90)
+MAX_CALIBRATION_ATTEMPTS = 4
+REQUEST_TIMEOUT = 3600
 
 
 def ollama_model_name(model_ref):
