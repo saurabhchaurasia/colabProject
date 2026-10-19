@@ -6,14 +6,10 @@ REPO_DIR="/workspace/colabProject"
 NEED_CLONE=false
 export OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
 
-if [[ -f "${SCRIPT_DIR}/benchmark_model.py" ]]; then
-  BENCHMARK_SCRIPT="${SCRIPT_DIR}/benchmark_model.py"
-elif [[ -f "${REPO_DIR}/benchmark_model.py" ]]; then
+if [[ ! -f "${SCRIPT_DIR}/benchmark_model.py" && -f "${REPO_DIR}/benchmark_model.py" ]]; then
   SCRIPT_DIR="${REPO_DIR}"
-  BENCHMARK_SCRIPT="${SCRIPT_DIR}/benchmark_model.py"
-else
+elif [[ ! -f "${SCRIPT_DIR}/benchmark_model.py" ]]; then
   NEED_CLONE=true
-  BENCHMARK_SCRIPT="${REPO_DIR}/benchmark_model.py"
 fi
 
 if [[ "${NEED_CLONE}" == true && -e "${REPO_DIR}" ]]; then
@@ -58,8 +54,13 @@ if [[ "${NEED_CLONE}" == true ]]; then
   echo "Cloning benchmark repository..."
   git clone https://github.com/saurabhchaurasia/colabProject.git "${REPO_DIR}"
   SCRIPT_DIR="${REPO_DIR}"
-  BENCHMARK_SCRIPT="${SCRIPT_DIR}/benchmark_model.py"
 fi
+
+if [[ ! -f "${SCRIPT_DIR}/test.sh" ]]; then
+  echo "Test script not found: ${SCRIPT_DIR}/test.sh" >&2
+  exit 1
+fi
+chmod +x "${SCRIPT_DIR}/test.sh"
 
 if ! command -v ollama >/dev/null 2>&1; then
   echo "Installing Ollama..."
@@ -88,4 +89,4 @@ if [[ "${ollama_ready}" != true ]]; then
   exit 1
 fi
 
-python3 "${BENCHMARK_SCRIPT}"
+echo "Setup complete. Run the benchmark with: bash ${SCRIPT_DIR}/test.sh"

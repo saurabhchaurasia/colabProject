@@ -7,9 +7,9 @@ These scripts install/start Ollama and pull/check a model. The optional
 
 | Variable | Used by | Default | Description |
 | --- | --- | --- | --- |
-| `MODEL` | `ollama_run_linux.sh`, `benchmark_model.py`, `load2.sh` | `unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M` | Hugging Face model repository and GGUF variant to pull. The scripts add the `hf.co/` prefix when calling Ollama. |
-| `OLLAMA_HOST` | `load.sh`, `cloudflare.sh`, `benchmark_model.py`, `load2.sh` | `127.0.0.1:11434` | Ollama server host and port. Use the `host:port` form without `http://`; it is used to check the API and, when started, to configure the Cloudflare tunnel. |
-| `CONTEXT_SIZE` | `benchmark_model.py`, `load2.sh` | `120000` | Context window size, in tokens, passed to Ollama for the benchmark. The 25%, 50%, 75%, and 90% checkpoints are calculated against this value. Confirm the selected model and available memory support this context size. |
+| `MODEL` | `ollama_run_linux.sh`, `benchmark_model.py`, `test.sh` | `unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M` | Hugging Face model repository and GGUF variant to pull. The scripts add the `hf.co/` prefix when calling Ollama. |
+| `OLLAMA_HOST` | `load.sh`, `cloudflare.sh`, `benchmark_model.py`, `load2.sh`, `test.sh` | `127.0.0.1:11434` | Ollama server host and port. Use the `host:port` form without `http://`; it is used to check the API and, when started, to configure the Cloudflare tunnel. |
+| `CONTEXT_SIZE` | `benchmark_model.py`, `test.sh` | `120000` | Context window size, in tokens, passed to Ollama for the benchmark. The 25%, 50%, 75%, and 90% checkpoints are calculated against this value. Confirm the selected model and available memory support this context size. |
 
 Set a variable for one command:
 
@@ -44,22 +44,29 @@ CONTEXT_SIZE=120000 MODEL="unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M" \
   python3 benchmark_model.py
 ```
 
-## Automatic setup and benchmark
+## Setup and run the benchmark
 
 On Debian/Ubuntu Linux, `load2.sh` installs missing `curl`, `python3`, and
 `zstd` packages, installs `git` if a clone is needed, installs Ollama if needed,
-starts or reuses its server, and then runs the context benchmark. If the
-benchmark script is not beside `load2.sh`, it clones this repository into
-`/workspace/colabProject`. Package installation requires root or `sudo`.
+starts or reuses its server, and prepares the project without running the
+benchmark. If the benchmark script is not beside `load2.sh`, it clones this
+repository into `/workspace/colabProject`. Package installation requires root
+or `sudo`.
 
 ```bash
 bash load2.sh
 ```
 
-You can set benchmark variables when starting it:
+When setup finishes, run the benchmark yourself:
 
 ```bash
-MODEL="unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M" CONTEXT_SIZE=120000 bash load2.sh
+bash /workspace/colabProject/test.sh
+```
+
+Pass benchmark settings to `test.sh`:
+
+```bash
+MODEL="unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M" CONTEXT_SIZE=120000 bash test.sh
 ```
 
 To use a custom endpoint for scripts launched from `load.sh`, export it first:
