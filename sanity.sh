@@ -8,6 +8,7 @@ load_project_env "${SCRIPT_DIR}/.env"
 MODEL="${MODEL:-unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M}"
 OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
 CONTEXT_SIZE="${CONTEXT_SIZE:-120000}"
+NUM_GPU_LAYERS="${NUM_GPU_LAYERS:-999}"
 
 if ! command -v ollama >/dev/null 2>&1; then
   echo "Ollama is required. Run load2.sh first." >&2
@@ -23,14 +24,18 @@ if [[ ! "${CONTEXT_SIZE}" =~ ^[1-9][0-9]*$ ]]; then
   echo "CONTEXT_SIZE must be a positive integer." >&2
   exit 1
 fi
+if [[ ! "${NUM_GPU_LAYERS}" =~ ^[1-9][0-9]*$ ]]; then
+  echo "NUM_GPU_LAYERS must be a positive integer." >&2
+  exit 1
+fi
 
-export MODEL OLLAMA_HOST CONTEXT_SIZE
+export MODEL OLLAMA_HOST CONTEXT_SIZE NUM_GPU_LAYERS
 model="hf.co/${MODEL#hf.co/}"
 
 echo "Pulling ${model}..."
 ollama pull "${model}"
 
-echo "Sending initial request with a ${CONTEXT_SIZE}-token context."
+echo "Sending initial request with a ${CONTEXT_SIZE}-token context and up to ${NUM_GPU_LAYERS} GPU layers."
 echo "This may take a while while Ollama loads the model and prepares the context."
 python3 - <<'PY'
 import json
@@ -53,6 +58,7 @@ request = urllib.request.Request(
             "think": False,
             "options": {
                 "num_ctx": int(os.environ["CONTEXT_SIZE"]),
+                "num_gpu": int(os.environ["NUM_GPU_LAYERS"]),
                 "num_predict": 1,
                 "temperature": 0,
             },

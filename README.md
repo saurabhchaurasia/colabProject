@@ -13,6 +13,7 @@ environment take precedence. The file uses `KEY=value` lines:
 MODEL=unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M
 OLLAMA_HOST=127.0.0.1:11434
 CONTEXT_SIZE=120000
+NUM_GPU_LAYERS=999
 ```
 
 | Variable | Used by | Default | Description |
@@ -20,6 +21,7 @@ CONTEXT_SIZE=120000
 | `MODEL` | `ollama_run_linux.sh`, `benchmark_model.py`, `sanity.sh`, `test.sh` | `unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M` | Hugging Face model repository and GGUF variant to pull. The scripts add the `hf.co/` prefix when calling Ollama. |
 | `OLLAMA_HOST` | `load.sh`, `cloudflare.sh`, `benchmark_model.py`, `load2.sh`, `sanity.sh`, `test.sh` | `127.0.0.1:11434` | Ollama server host and port. Use the `host:port` form without `http://`; it is used to check the API and, when started, to configure the Cloudflare tunnel. |
 | `CONTEXT_SIZE` | `benchmark_model.py`, `sanity.sh`, `test.sh` | `120000` | Context window size, in tokens, passed to Ollama for the benchmark and initial model request. The 20%, 40%, 50%, 60%, 70%, 80%, and 90% checkpoints are calculated against this value. Confirm the selected model and available memory support this context size. |
+| `NUM_GPU_LAYERS` | `benchmark_model.py`, `sanity.sh`, `test.sh` | `999` | Maximum number of model layers requested for GPU offload. Ollama can distribute layers across visible GPUs; confirm `ollama ps` reports `100% GPU` after loading. A high request cannot make an oversized model or context fit in VRAM. |
 
 Set a variable for one command:
 

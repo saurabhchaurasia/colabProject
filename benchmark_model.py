@@ -49,6 +49,7 @@ load_environment()
 MODEL = os.environ.get("MODEL", "unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M")
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "127.0.0.1:11434").rstrip("/")
 CONTEXT_SIZE = int(os.environ.get("CONTEXT_SIZE", "120000"))
+NUM_GPU_LAYERS = int(os.environ.get("NUM_GPU_LAYERS", "999"))
 NUM_PREDICT = min(4096, max(1, CONTEXT_SIZE // 10))
 BASELINE_NUM_PREDICT = min(64, NUM_PREDICT)
 CALIBRATION_NUM_PREDICT = 1
@@ -88,6 +89,7 @@ def chat(model, messages, num_predict, stream=False):
             "think": False,
             "options": {
                 "num_ctx": CONTEXT_SIZE,
+                "num_gpu": NUM_GPU_LAYERS,
                 "num_predict": num_predict,
                 "temperature": 0,
             },
@@ -260,6 +262,8 @@ def main():
     benchmark_started_at = time.perf_counter()
     if CONTEXT_SIZE <= 0:
         raise SystemExit("CONTEXT_SIZE must be a positive integer.")
+    if NUM_GPU_LAYERS <= 0:
+        raise SystemExit("NUM_GPU_LAYERS must be a positive integer.")
     if not MODEL:
         raise SystemExit("MODEL must not be empty.")
     if not shutil.which("ollama"):
@@ -269,7 +273,8 @@ def main():
     model = ollama_model_name(MODEL)
     print(
         f"Benchmarking {MODEL} with a {CONTEXT_SIZE:,}-token context. "
-        "Ensure the model and available memory support this size."
+        f"Requesting up to {NUM_GPU_LAYERS} GPU layers. "
+        "Ensure the model and available memory support this configuration."
     )
     print(f"Pulling {model}...")
     subprocess.run(["ollama", "pull", model], check=True)

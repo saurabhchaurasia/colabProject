@@ -5,6 +5,7 @@ load_project_env() {
   local model_was_set="${MODEL+x}" model_value="${MODEL-}"
   local ollama_host_was_set="${OLLAMA_HOST+x}" ollama_host_value="${OLLAMA_HOST-}"
   local context_size_was_set="${CONTEXT_SIZE+x}" context_size_value="${CONTEXT_SIZE-}"
+  local num_gpu_layers_was_set="${NUM_GPU_LAYERS+x}" num_gpu_layers_value="${NUM_GPU_LAYERS-}"
 
   if [[ -f "${env_file}" ]]; then
     set -a
@@ -22,6 +23,9 @@ load_project_env() {
   if [[ -n "${context_size_was_set}" ]]; then
     CONTEXT_SIZE="${context_size_value}"
   fi
+  if [[ -n "${num_gpu_layers_was_set}" ]]; then
+    NUM_GPU_LAYERS="${num_gpu_layers_value}"
+  fi
 
-  export MODEL OLLAMA_HOST CONTEXT_SIZE
+  export MODEL OLLAMA_HOST CONTEXT_SIZE NUM_GPU_LAYERS
 }
