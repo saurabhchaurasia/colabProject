@@ -74,6 +74,9 @@ fi
 if ! curl -fsS "http://${OLLAMA_HOST}/api/tags" >/dev/null 2>&1; then
   echo "Starting Ollama server..."
   nohup ollama serve >/tmp/ollama-serve.log 2>&1 </dev/null &
+else
+  echo "Ollama is already running. Confirm it was started with OLLAMA_KV_CACHE_TYPE=${OLLAMA_KV_CACHE_TYPE}."
+  echo "Changing .env does not update the settings of an already-running Ollama server."
 fi
 
 ollama_ready=false

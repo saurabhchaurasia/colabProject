@@ -14,6 +14,7 @@ MODEL=unsloth/Qwen3.5-0.8B-MTP-GGUF:Q4_K_M
 OLLAMA_HOST=127.0.0.1:11434
 CONTEXT_SIZE=120000
 NUM_GPU_LAYERS=999
+OLLAMA_KV_CACHE_TYPE=q8_0
 ```
 
 | Variable | Used by | Default | Description |
@@ -22,6 +23,7 @@ NUM_GPU_LAYERS=999
 | `OLLAMA_HOST` | `load.sh`, `cloudflare.sh`, `benchmark_model.py`, `load2.sh`, `sanity.sh`, `test.sh` | `127.0.0.1:11434` | Ollama server host and port. Use the `host:port` form without `http://`; it is used to check the API and, when started, to configure the Cloudflare tunnel. |
 | `CONTEXT_SIZE` | `benchmark_model.py`, `sanity.sh`, `test.sh` | `120000` | Context window size, in tokens, passed to Ollama for the benchmark and initial model request. The 20%, 40%, 50%, 60%, 70%, 80%, and 90% checkpoints are calculated against this value. Confirm the selected model and available memory support this context size. |
 | `NUM_GPU_LAYERS` | `benchmark_model.py`, `sanity.sh`, `test.sh` | `999` | Maximum number of model layers requested for GPU offload. Ollama can distribute layers across visible GPUs; confirm `ollama ps` reports `100% GPU` after loading. A high request cannot make an oversized model or context fit in VRAM. |
+| `OLLAMA_KV_CACHE_TYPE` | Ollama server (`load.sh`, `load2.sh`) | `q8_0` | KV-cache precision used by Ollama. `q8_0` is 8-bit integer quantization, not FP8; it can reduce KV-cache memory use. The Ollama server must be started with this variable, so restart an already-running server after changing it. |
 
 Set a variable for one command:
 
@@ -44,6 +46,24 @@ bash test.sh
 settings as the benchmark, limits its initial response to one token, and prints
 `ollama ps` after the request completes. This separates the first model load
 from benchmark measurements.
+
+The `OLLAMA_KV_CACHE_TYPE` setting is read by the Ollama server, not by an
+individual chat request. `load2.sh` passes it when starting Ollama if no server
+is already running. If Ollama was already running when you changed `.env`,
+restart that server with the setting applied before benchmarking. Ollama
+supports `f16`, `q8_0`, and `q4_0` KV-cache types; `q8_0` is not FP8.
+
+Restart the local Ollama server with the configured KV-cache type by running:
+
+```bash
+./restart-ollama.sh
+```
+
+The script reads `OLLAMA_KV_CACHE_TYPE` from `.env` (or the current environment),
+stops a standalone `ollama serve` process if one is running, then calls
+`load.sh` to start Ollama with the setting. `load.sh` applies a runtime override
+and restarts Ollama when it is managed by systemd. It requires `sudo` when
+restarting a systemd-managed service.
 
 ## Context benchmark
 

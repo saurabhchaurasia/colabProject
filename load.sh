@@ -21,15 +21,49 @@ if ! command -v ollama >/dev/null 2>&1; then
   curl -fsSL https://ollama.com/install.sh | sh
 fi
 
-# ollama serve
 OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
 
-if pgrep -f "ollama serve" >/dev/null 2>&1; then
-  echo "Stopping existing Ollama server..."
-  pkill -f "ollama serve" || true
-fi
+OLLAMA_KV_CACHE_TYPE="${OLLAMA_KV_CACHE_TYPE:-q8_0}"
+case "${OLLAMA_KV_CACHE_TYPE}" in
+  f16|q8_0|q4_0) ;;
+  *)
+    echo "OLLAMA_KV_CACHE_TYPE must be one of: f16, q8_0, q4_0." >&2
+    exit 1
+    ;;
+esac
 
-nohup ollama serve >/tmp/ollama-serve.log 2>&1 &
+if command -v systemctl >/dev/null 2>&1 &&
+  systemctl cat ollama.service >/dev/null 2>&1 &&
+  systemctl is-active --quiet ollama.service; then
+  if (( EUID == 0 )); then
+    systemctl_cmd=(systemctl)
+  elif command -v sudo >/dev/null 2>&1; then
+    systemctl_cmd=(sudo systemctl)
+  else
+    echo "Restarting the Ollama systemd service requires root privileges or sudo." >&2
+    exit 1
+  fi
+
+  dropin_dir="/run/systemd/system/ollama.service.d"
+  dropin_file="${dropin_dir}/kv-cache-type.conf"
+  if (( EUID == 0 )); then
+    mkdir -p "${dropin_dir}"
+    printf '[Service]\nEnvironment=OLLAMA_KV_CACHE_TYPE=%s\n' \
+      "${OLLAMA_KV_CACHE_TYPE}" >"${dropin_file}"
+  else
+    sudo mkdir -p "${dropin_dir}"
+    printf '[Service]\nEnvironment=OLLAMA_KV_CACHE_TYPE=%s\n' \
+      "${OLLAMA_KV_CACHE_TYPE}" | sudo tee "${dropin_file}" >/dev/null
+  fi
+  "${systemctl_cmd[@]}" daemon-reload
+  "${systemctl_cmd[@]}" restart ollama.service
+else
+  stop_standalone_ollama_server
+  nohup env \
+    OLLAMA_HOST="${OLLAMA_HOST}" \
+    OLLAMA_KV_CACHE_TYPE="${OLLAMA_KV_CACHE_TYPE}" \
+    ollama serve >/tmp/ollama-serve.log 2>&1 </dev/null &
+fi
 
 for _ in {1..30}; do
   if curl -fsS "http://${OLLAMA_HOST}/api/tags" >/dev/null 2>&1; then
