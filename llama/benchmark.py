@@ -44,6 +44,12 @@ SERVER_PORT = int(os.environ.get("SERVER_PORT", "8080"))
 CONTEXT_SIZE = int(os.environ.get("CONTEXT_SIZE", "120000"))
 NUM_PREDICT = 4096
 CHECKPOINTS = (10, 25, 50, 75, 90)
+TEMPERATURE = float(os.environ.get("TEMPERATURE", "0.8"))
+TOP_K = int(os.environ.get("TOP_K", "40"))
+TOP_P = float(os.environ.get("TOP_P", "0.95"))
+MIN_P = float(os.environ.get("MIN_P", "0.05"))
+PRESENCE_PENALTY = float(os.environ.get("PRESENCE_PENALTY", "0.0"))
+REPEAT_PENALTY = float(os.environ.get("REPEAT_PENALTY", "1.0"))
 BASE_URL = f"http://{SERVER_HOST}:{SERVER_PORT}"
 REQUEST_TIMEOUT = 3600
 CALIBRATION_ATTEMPTS = 6
@@ -121,7 +127,12 @@ def completion(prompt, num_predict):
             {
                 "prompt": prompt,
                 "n_predict": num_predict,
-                "temperature": 0,
+                "temperature": TEMPERATURE,
+                "top_k": TOP_K,
+                "top_p": TOP_P,
+                "min_p": MIN_P,
+                "presence_penalty": PRESENCE_PENALTY,
+                "repeat_penalty": REPEAT_PENALTY,
                 "ignore_eos": True,
                 "cache_prompt": False,
                 "stream": True,

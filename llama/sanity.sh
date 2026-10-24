@@ -24,9 +24,13 @@ request = urllib.request.Request(
                 {"role": "user", "content": "Hi! Please reply with one short greeting."}
             ],
             "max_tokens": 64,
-            "temperature": 0,
+            "temperature": float(os.environ.get("TEMPERATURE", "0.8")),
+            "top_k": int(os.environ.get("TOP_K", "40")),
+            "top_p": float(os.environ.get("TOP_P", "0.95")),
+            "min_p": float(os.environ.get("MIN_P", "0.05")),
+            "presence_penalty": float(os.environ.get("PRESENCE_PENALTY", "0.0")),
+            "repeat_penalty": float(os.environ.get("REPEAT_PENALTY", "1.0")),
             "stream": False,
-            "chat_template_kwargs": {"enable_thinking": False},
         }
     ).encode("utf-8"),
     headers={"Content-Type": "application/json"},

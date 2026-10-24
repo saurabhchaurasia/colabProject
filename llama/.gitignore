@@ -1,4 +1,4 @@
 llama-prebuilt/
 models/
-llama-server.log
-llama-server.pid
+llama-server*.log
+llama-server*.pid

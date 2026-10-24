@@ -139,7 +139,18 @@ bash llama/sanity.sh
 bash llama/test.sh
 ```
 
-This path builds llama.cpp with CUDA and uses a Q4_K_M GGUF. See
+This path builds llama.cpp with CUDA and uses the base Q5_K_XL GGUF by default. See
 [`llama/README.md`](./llama/README.md) for prerequisites, GPU offload behavior,
-and configuration options. It has its own environment file and does not
-change the Ollama benchmark settings.
+and configuration options. Its `llama/.env` file selects the `base` or `dual`
+configuration and does not change the Ollama benchmark settings.
+
+To select the Qwen3.8-27B dual-RTX-5060-Ti configuration, change
+`PROFILE=base` to `PROFILE=dual` in `llama/.env`, then run:
+
+```bash
+bash llama/load3.sh
+bash llama/test.sh
+```
+
+See [`llama/README.md`](./llama/README.md) for its model quantization and
+hardware requirements.
