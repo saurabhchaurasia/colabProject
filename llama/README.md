@@ -1,6 +1,6 @@
 # llama.cpp Qwen3.5 benchmark
 
-This directory builds and runs a separate CUDA-enabled llama.cpp benchmark for
+This directory sets up and runs a separate CUDA-enabled llama.cpp benchmark for
 Qwen3.5-0.8B. It does not use or change the root Ollama configuration.
 
 ## Setup
@@ -19,18 +19,16 @@ Run setup from the repository root or this directory:
 bash llama/load3.sh
 ```
 
-`load3.sh` installs missing Debian/Ubuntu build tools, requires an NVIDIA CUDA
-GPU and downloads the official prebuilt llama.cpp CUDA server and its matching
-runtime libraries. It does not need `nvcc` or a local compiler. The default
-CUDA 12.8 build requires NVIDIA driver 570.26 or newer; set `CUDA_VERSION` in
-`.env` only when you need another available release variant.
-The script also downloads the configured GGUF and starts the local server. It
-leaves the server running and prints the benchmark command when ready. If its
-server is already healthy at the selected port, it reuses it and skips
-installation and downloads. Stop that server before running setup to apply
-changed settings. If a different server already occupies the configured port,
-setup stops with an error rather than silently using that server's model or
-settings.
+`load3.sh` only installs missing Debian/Ubuntu build tools and downloads the
+official prebuilt llama.cpp CUDA server and matching runtime libraries. It
+does not read the model profile, download a model, or start a server. It does
+not need `nvcc` or a local compiler. The default CUDA 12.8 build requires
+NVIDIA driver 570.26 or newer. Set `CUDA_VERSION` in the environment to choose
+another available release variant when running `load3.sh` directly; `sanity.sh`
+passes the configured `.env` value through automatically.
+When `load3.sh` is run by itself outside this project directory, it installs
+the prebuilt under `~/.cache/colabProject/llama` (or `LLAMA_HOME`). `sanity.sh`
+uses that same location if the prebuilt is not in the project directory.
 
 Warm up the model with a short chat-formatted greeting before benchmarking:
 
@@ -38,11 +36,15 @@ Warm up the model with a short chat-formatted greeting before benchmarking:
 bash llama/sanity.sh
 ```
 
-`sanity.sh` invokes `load3.sh` to make sure the server and model are present,
-then sends a chat-formatted greeting with Qwen thinking disabled and prints its
+`sanity.sh` loads the selected profile, invokes `load3.sh` to ensure llama.cpp
+is installed, downloads the configured GGUF if needed, validates the GPU
+configuration, and starts the server if it is not already healthy. It then
+sends a chat-formatted greeting with Qwen thinking disabled and prints its
 response and timing. It allows up to 64 generated tokens and does not run the
-context benchmark. This avoids treating a one-token raw completion as a full
-answer.
+context benchmark. If a healthy managed server is already running, it reuses
+it without downloading the model again. Stop the server before running sanity
+to apply changed model or server settings. A different server at the selected
+port is rejected rather than silently using its model or settings.
 
 Run or repeat the benchmark:
 
@@ -106,7 +108,7 @@ and draft-MTP settings. The sample's Q6 label does not match the requested
 `UD-Q5_K_XL` file, so this profile uses the Q5_K_XL quantization.
 
 The profile requires two visible GPUs and exactly one tensor-split weight per
-GPU. The setup script checks this before downloading the large model. Verify
+GPU. `sanity.sh` checks this before downloading the large model. Verify
 the actual two-card VRAM capacity: 27B Q5_K_XL weights plus a 131K f16 KV cache
 may exceed 2 × 16 GB, so full GPU residency is not guaranteed. The server
 uses the configured values as requested and exits if the requested context

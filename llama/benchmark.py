@@ -77,7 +77,7 @@ def ensure_server_is_running():
             return
     except (urllib.error.URLError, TimeoutError) as exc:
         raise SystemExit(
-            f"Cannot reach llama.cpp server at {BASE_URL}. Run load3.sh first."
+            f"Cannot reach llama.cpp server at {BASE_URL}. Run sanity.sh first."
         ) from exc
 
 

@@ -139,7 +139,8 @@ bash llama/sanity.sh
 bash llama/test.sh
 ```
 
-This path builds llama.cpp with CUDA and uses the base Q5_K_XL GGUF by default. See
+This path sets up llama.cpp with CUDA; `sanity.sh` loads the base Q5_K_XL GGUF
+by default. See
 [`llama/README.md`](./llama/README.md) for prerequisites, GPU offload behavior,
 and configuration options. Its `llama/.env` file selects the `base` or `dual`
 configuration and does not change the Ollama benchmark settings.
