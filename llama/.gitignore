@@ -1,0 +1,4 @@
+llama-prebuilt/
+models/
+llama-server.log
+llama-server.pid

@@ -127,3 +127,19 @@ bash load.sh
 
 The Cloudflare tunnel launch in `load.sh` is currently commented out. To start
 the tunnel separately, run `bash cloudflare.sh`.
+
+## llama.cpp Qwen3.5 benchmark
+
+For a separate llama.cpp-based Qwen3.5-0.8B benchmark, configure
+[`llama/.env`](./llama/.env), then run:
+
+```bash
+bash llama/load3.sh
+bash llama/sanity.sh
+bash llama/test.sh
+```
+
+This path builds llama.cpp with CUDA and uses a Q4_K_M GGUF. See
+[`llama/README.md`](./llama/README.md) for prerequisites, GPU offload behavior,
+and configuration options. It has its own environment file and does not
+change the Ollama benchmark settings.
