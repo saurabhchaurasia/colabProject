@@ -19,16 +19,15 @@ Run setup from the repository root or this directory:
 bash llama/load3.sh
 ```
 
-`load3.sh` only installs missing Debian/Ubuntu build tools and downloads the
-official prebuilt llama.cpp CUDA server and matching runtime libraries. It
-does not read the model profile, download a model, or start a server. It does
-not need `nvcc` or a local compiler. The default CUDA 12.8 build requires
-NVIDIA driver 570.26 or newer. Set `CUDA_VERSION` in the environment to choose
-another available release variant when running `load3.sh` directly; `sanity.sh`
-passes the configured `.env` value through automatically.
-When `load3.sh` is run by itself outside this project directory, it installs
-the prebuilt under `~/.cache/colabProject/llama` (or `LLAMA_HOME`). `sanity.sh`
-uses that same location if the prebuilt is not in the project directory.
+`load3.sh` clones the project into `/workspace/colabProject` if it is missing,
+or fast-forward pulls `main` when the existing checkout has no local changes.
+Set `COLAB_PROJECT_DIR` to use another checkout path. It refuses to pull a
+checkout with local changes or a different origin/branch. The script also
+installs missing Debian/Ubuntu build tools and downloads the official prebuilt
+llama.cpp CUDA server and matching runtime libraries into the project checkout.
+It does not read the model profile, download a model, or start a server. It
+does not need `nvcc` or a local compiler. The default CUDA 12.8 build requires
+NVIDIA driver 570.26 or newer.
 
 Warm up the model with a short chat-formatted greeting before benchmarking:
 

@@ -3,15 +3,13 @@ set -euo pipefail
 
 SCRIPT_PATH="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/$(basename -- "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(dirname -- "${SCRIPT_PATH}")"
+PROJECT_DIR="${COLAB_PROJECT_DIR:-/workspace/colabProject}"
+PROJECT_REPO="https://github.com/saurabhchaurasia/colabProject"
 DEFAULT_LLAMA_HOME="${XDG_CACHE_HOME:-${HOME:-/tmp}/.cache}/colabProject/llama"
 if [[ -n "${LLAMA_HOME:-}" ]]; then
   APP_DIR="${LLAMA_HOME}"
-elif [[ -f "${SCRIPT_DIR}/sanity.sh" ]] &&
-    { [[ -x "${SCRIPT_DIR}/llama-prebuilt/llama-server" ]] ||
-      [[ ! -x "${DEFAULT_LLAMA_HOME}/llama-prebuilt/llama-server" ]]; }; then
-  APP_DIR="${SCRIPT_DIR}"
 else
-  APP_DIR="${DEFAULT_LLAMA_HOME}"
+  APP_DIR="${PROJECT_DIR}/llama"
 fi
 INSTALL_DIR="${APP_DIR}/llama-prebuilt"
 CUDA_VERSION="12.8"
@@ -26,6 +24,7 @@ missing=()
 command -v curl >/dev/null 2>&1 || missing+=(curl)
 command -v python3 >/dev/null 2>&1 || missing+=(python3)
 command -v tar >/dev/null 2>&1 || missing+=(tar)
+command -v git >/dev/null 2>&1 || missing+=(git)
 if (( ${#missing[@]} > 0 )); then
   if ! command -v apt-get >/dev/null 2>&1; then
     echo "Missing prerequisites (${missing[*]}) and apt-get is unavailable." >&2
@@ -41,6 +40,35 @@ if (( ${#missing[@]} > 0 )); then
   fi
   "${apt_command[@]}" update
   "${apt_command[@]}" install -y "${missing[@]}"
+fi
+
+if [[ -d "${PROJECT_DIR}/.git" ]]; then
+  project_remote="$(git -C "${PROJECT_DIR}" remote get-url origin)"
+  project_remote="${project_remote%.git}"
+  project_remote="${project_remote%/}"
+  if [[ "${project_remote}" != "${PROJECT_REPO}" ]]; then
+    echo "Refusing to pull ${PROJECT_DIR}: origin is ${project_remote}, not ${PROJECT_REPO}." >&2
+    exit 1
+  fi
+  project_branch="$(git -C "${PROJECT_DIR}" branch --show-current)"
+  if [[ "${project_branch}" != main ]]; then
+    echo "Refusing to pull ${PROJECT_DIR}: checkout branch is '${project_branch}', expected 'main'." >&2
+    exit 1
+  fi
+  if [[ -n "$(git -C "${PROJECT_DIR}" status --porcelain)" ]]; then
+    echo "Refusing to pull ${PROJECT_DIR}: the checkout has local changes." >&2
+    echo "Commit or stash those changes, then run load3.sh again." >&2
+    exit 1
+  fi
+  echo "Pulling the latest colabProject into ${PROJECT_DIR}..."
+  git -C "${PROJECT_DIR}" pull --ff-only origin main
+elif [[ -e "${PROJECT_DIR}" && -n "$(find "${PROJECT_DIR}" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+  echo "Cannot clone colabProject: ${PROJECT_DIR} exists and is not an empty Git checkout." >&2
+  exit 1
+else
+  mkdir -p "$(dirname -- "${PROJECT_DIR}")"
+  echo "Cloning colabProject into ${PROJECT_DIR}..."
+  git clone --branch main --single-branch "${PROJECT_REPO}.git" "${PROJECT_DIR}"
 fi
 
 if ! command -v nvidia-smi >/dev/null 2>&1; then
@@ -132,5 +160,6 @@ if [[ ! -x "${SERVER_BIN}" ]]; then
   exit 1
 fi
 
+echo "colabProject is up to date at ${PROJECT_DIR}."
 echo "llama.cpp prerequisites and prebuilt are ready at ${INSTALL_DIR}."
-echo "Run sanity.sh to download the model and start the server."
+echo "Run ${PROJECT_DIR}/llama/sanity.sh to download the model and start the server."
