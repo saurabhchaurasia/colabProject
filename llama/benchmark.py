@@ -40,7 +40,7 @@ def load_environment():
 load_environment()
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "127.0.0.1")
-SERVER_PORT = int(os.environ.get("SERVER_PORT", "8080"))
+SERVER_PORT = int(os.environ.get("SERVER_PORT", "8150"))
 CONTEXT_SIZE = int(os.environ.get("CONTEXT_SIZE", "120000"))
 NUM_PREDICT = 4096
 CHECKPOINTS = (10, 25, 50, 75, 90)

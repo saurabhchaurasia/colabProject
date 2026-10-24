@@ -65,6 +65,17 @@ stops a standalone `ollama serve` process if one is running, then calls
 and restarts Ollama when it is managed by systemd. It requires `sudo` when
 restarting a systemd-managed service.
 
+## Restart llama.cpp
+
+Restart the llama.cpp server for the selected profile with:
+
+```bash
+./restart-llama.sh
+```
+
+This stops only the project-managed server on the selected profile's port, then
+uses `sanity.sh` to start it again with the current `.env` settings.
+
 ## Context benchmark
 
 With Ollama running, execute the benchmark script to pull the selected model,

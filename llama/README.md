@@ -40,11 +40,18 @@ bash llama/sanity.sh
 is installed, downloads the configured GGUF if needed, validates the GPU
 configuration, and starts the server if it is not already healthy. It then
 sends a chat-formatted greeting with Qwen thinking disabled and prints its
-response and timing. It allows up to 64 generated tokens and does not run the
+response and timing. It allows up to 128 generated tokens and does not run the
 context benchmark. If a healthy managed server is already running, it reuses
 it without downloading the model again. Stop the server before running sanity
 to apply changed model or server settings. A different server at the selected
 port is rejected rather than silently using its model or settings.
+
+Restart the selected llama.cpp server and apply current profile settings with
+the repository-level script:
+
+```bash
+bash restart-llama.sh
+```
 
 Run or repeat the benchmark:
 
@@ -75,7 +82,7 @@ server, sampling, and operating system is still expected.
 | `MODEL_FILE` | `Qwen3.5-0.8B-UD-Q5_K_XL.gguf` | GGUF file to download and run. |
 | `MODEL_DIR` | `models` | Model download directory, relative to this folder. |
 | `SERVER_HOST` | `127.0.0.1` | Local llama.cpp server bind address. |
-| `SERVER_PORT` | `8080` | Local llama.cpp server port. |
+| `SERVER_PORT` | `8150` | Local llama.cpp server port. |
 | `CONTEXT_SIZE` | `120000` | Context size requested for the server. Qwen3.5-0.8B has a native 262,144-token context, but hardware memory may limit usable size. |
 | `GPU_LAYERS` | `all` | Model layers to offload; `all` requests full offload. |
 | `KV_CACHE_TYPE` | `f16` | KV-cache type for both keys and values (`f16`, `q8_0`, or `q4_0`). |

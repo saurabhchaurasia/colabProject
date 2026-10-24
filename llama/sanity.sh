@@ -9,7 +9,7 @@ bash "${SCRIPT_DIR}/load3.sh"
 
 CONTEXT_SIZE="${CONTEXT_SIZE:-120000}"
 SERVER_HOST="${SERVER_HOST:-127.0.0.1}"
-SERVER_PORT="${SERVER_PORT:-8080}"
+SERVER_PORT="${SERVER_PORT:-8150}"
 GPU_LAYERS="${GPU_LAYERS:-all}"
 KV_CACHE_TYPE="${KV_CACHE_TYPE:-f16}"
 CUDA_VERSION="${CUDA_VERSION:-12.8}"
@@ -45,7 +45,7 @@ SERVER_BIN="$(find "${INSTALL_DIR}" -type f -name llama-server -executable -prin
 SERVER_URL="http://${SERVER_HOST}:${SERVER_PORT}"
 LOG_FILE="${SCRIPT_DIR}/llama-server.log"
 PID_FILE="${SCRIPT_DIR}/llama-server.pid"
-if [[ "${SERVER_PORT}" != 8080 ]]; then
+if [[ "${SERVER_PORT}" != 8150 ]]; then
   LOG_FILE="${SCRIPT_DIR}/llama-server-${SERVER_PORT}.log"
   PID_FILE="${SCRIPT_DIR}/llama-server-${SERVER_PORT}.pid"
 fi
@@ -146,7 +146,8 @@ fi
 server_already_running=false
 if [[ -n "${managed_server_pid}" ]]; then
   for _ in {1..120}; do
-    if curl -fsS "${SERVER_URL}/health" >/dev/null 2>&1; then
+    if curl --connect-timeout 1 --max-time 2 -fsS \
+        "${SERVER_URL}/health" >/dev/null 2>&1; then
       server_already_running=true
       echo "llama.cpp server PID ${managed_server_pid} is already running at ${SERVER_URL}."
       break
@@ -168,9 +169,37 @@ if [[ -n "${managed_server_pid}" ]]; then
 fi
 
 if [[ "${server_already_running}" != true ]] &&
-    curl -fsS "${SERVER_URL}/health" >/dev/null 2>&1; then
+    curl --connect-timeout 1 --max-time 2 -fsS \
+      "${SERVER_URL}/health" >/dev/null 2>&1; then
   echo "A server not started by llama/load3.sh is already responding at ${SERVER_URL}." >&2
   echo "Stop it or choose another SERVER_PORT; refusing to use an unknown model/configuration." >&2
+  exit 1
+fi
+
+if [[ "${server_already_running}" != true ]] &&
+    ! python3 - "${SERVER_HOST}" "${SERVER_PORT}" <<'PY'
+import socket
+import sys
+
+host, port = sys.argv[1], int(sys.argv[2])
+try:
+    addresses = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+except OSError as exc:
+    raise SystemExit(f"Could not resolve server address {host}: {exc}") from exc
+
+for family, socktype, protocol, _, address in addresses:
+    listener = socket.socket(family, socktype, protocol)
+    try:
+        listener.bind(address)
+    except OSError as exc:
+        raise SystemExit(
+            f"Cannot bind {host}:{port}; the address is already in use: {exc}"
+        ) from exc
+    finally:
+        listener.close()
+PY
+then
+  echo "Choose another SERVER_PORT in .env or stop the process using ${SERVER_HOST}:${SERVER_PORT}." >&2
   exit 1
 fi
 
@@ -232,7 +261,8 @@ if [[ "${server_already_running}" != true ]]; then
 
   server_ready=false
   for _ in {1..120}; do
-    if curl -fsS "${SERVER_URL}/health" >/dev/null 2>&1; then
+    if curl --connect-timeout 1 --max-time 2 -fsS \
+        "${SERVER_URL}/health" >/dev/null 2>&1; then
       server_ready=true
       break
     fi
@@ -244,6 +274,9 @@ if [[ "${server_already_running}" != true ]]; then
   if [[ "${server_ready}" != true ]]; then
     echo "llama.cpp server did not become ready at ${SERVER_URL}." >&2
     if [[ -f "${LOG_FILE}" ]]; then
+      if grep -Fq "couldn't bind HTTP server socket" "${LOG_FILE}"; then
+        echo "The configured port is occupied. Stop its listener or choose another SERVER_PORT in .env." >&2
+      fi
       tail -n 50 "${LOG_FILE}" >&2
     fi
     exit 1
