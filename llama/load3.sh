@@ -14,7 +14,7 @@ else
   APP_DIR="${DEFAULT_LLAMA_HOME}"
 fi
 INSTALL_DIR="${APP_DIR}/llama-prebuilt"
-CUDA_VERSION="${CUDA_VERSION:-12.8}"
+CUDA_VERSION="12.8"
 SERVER_BIN="$(find "${INSTALL_DIR}" -type f -name llama-server -executable -print -quit 2>/dev/null || true)"
 
 if [[ ! "${CUDA_VERSION}" =~ ^[0-9]+\.[0-9]+$ ]]; then
