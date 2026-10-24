@@ -25,10 +25,12 @@ runtime libraries. It does not need `nvcc` or a local compiler. The default
 CUDA 12.8 build requires NVIDIA driver 570.26 or newer; set `CUDA_VERSION` in
 `.env` only when you need another available release variant.
 The script also downloads the configured GGUF and starts the local server. It
-leaves the server running and prints the benchmark command when ready. It
-restarts a server previously started by this script to apply current settings;
-if a different server already occupies the configured port, it stops with an
-error rather than silently using that server's model or settings.
+leaves the server running and prints the benchmark command when ready. If its
+server is already healthy at the selected port, it reuses it and skips
+installation and downloads. Stop that server before running setup to apply
+changed settings. If a different server already occupies the configured port,
+setup stops with an error rather than silently using that server's model or
+settings.
 
 Warm up the model with a short chat-formatted greeting before benchmarking:
 

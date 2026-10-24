@@ -109,6 +109,52 @@ if (( ${#missing[@]} > 0 )); then
   "${apt_command[@]}" install -y "${missing[@]}"
 fi
 
+managed_server_pid=""
+if [[ -f "${PID_FILE}" ]]; then
+  saved_pid="$(<"${PID_FILE}")"
+  if [[ "${saved_pid}" =~ ^[1-9][0-9]*$ ]] &&
+      kill -0 "${saved_pid}" >/dev/null 2>&1 &&
+      [[ -r "/proc/${saved_pid}/cmdline" ]]; then
+    process_args="$(tr '\0' ' ' <"/proc/${saved_pid}/cmdline")"
+    if [[ "${process_args}" == *"${INSTALL_DIR}/"*llama-server* ]]; then
+      managed_server_pid="${saved_pid}"
+    fi
+  fi
+fi
+
+if [[ -n "${managed_server_pid}" ]]; then
+  for _ in {1..120}; do
+    if curl -fsS "${SERVER_URL}/health" >/dev/null 2>&1; then
+      echo "llama.cpp server PID ${managed_server_pid} is already running at ${SERVER_URL}."
+      echo "Reusing it; skipping llama.cpp installation, model download, and restart."
+      exit 0
+    fi
+    if ! kill -0 "${managed_server_pid}" >/dev/null 2>&1; then
+      managed_server_pid=""
+      break
+    fi
+    sleep 1
+  done
+  if [[ -n "${managed_server_pid}" ]]; then
+    echo "llama.cpp server PID ${managed_server_pid} is running but not healthy at ${SERVER_URL}." >&2
+    echo "Check ${LOG_FILE}; refusing to download or replace a running server." >&2
+    if [[ -f "${LOG_FILE}" ]]; then
+      tail -n 50 "${LOG_FILE}" >&2
+    fi
+    exit 1
+  fi
+fi
+
+if curl -fsS "${SERVER_URL}/health" >/dev/null 2>&1; then
+  echo "A server not started by llama/load3.sh is already responding at ${SERVER_URL}." >&2
+  echo "Stop it or choose another SERVER_PORT; refusing to install or use an unknown server." >&2
+  exit 1
+fi
+
+if [[ -f "${PID_FILE}" ]]; then
+  rm -f "${PID_FILE}"
+fi
+
 if ! command -v nvidia-smi >/dev/null 2>&1; then
   echo "nvidia-smi was not found; cannot confirm NVIDIA GPU availability." >&2
   exit 1
@@ -224,44 +270,6 @@ if [[ ! -f "${MODEL_PATH}" ]]; then
     "https://huggingface.co/${MODEL_REPO}/resolve/main/${MODEL_FILE}?download=true" \
     -o "${MODEL_PATH}.part"
   mv "${MODEL_PATH}.part" "${MODEL_PATH}"
-fi
-
-managed_server_pid=""
-if [[ -f "${PID_FILE}" ]]; then
-  saved_pid="$(<"${PID_FILE}")"
-  if [[ "${saved_pid}" =~ ^[1-9][0-9]*$ ]] &&
-      kill -0 "${saved_pid}" >/dev/null 2>&1 &&
-      [[ -r "/proc/${saved_pid}/cmdline" ]]; then
-    process_args="$(tr '\0' ' ' <"/proc/${saved_pid}/cmdline")"
-    if [[ "${process_args}" == *"${INSTALL_DIR}/"*llama-server* ]]; then
-      managed_server_pid="${saved_pid}"
-    fi
-  fi
-fi
-
-if curl -fsS "${SERVER_URL}/health" >/dev/null 2>&1 &&
-    [[ -z "${managed_server_pid}" ]]; then
-  echo "A server not started by llama/load3.sh is already responding at ${SERVER_URL}." >&2
-  echo "Stop it or choose another SERVER_PORT; refusing to use an unknown model/configuration." >&2
-  exit 1
-fi
-
-if [[ -n "${managed_server_pid}" ]]; then
-  echo "Restarting llama.cpp server PID ${managed_server_pid} with the current .env settings..."
-  kill -TERM "${managed_server_pid}"
-  for _ in {1..30}; do
-    if ! kill -0 "${managed_server_pid}" >/dev/null 2>&1; then
-      break
-    fi
-    sleep 1
-  done
-  if kill -0 "${managed_server_pid}" >/dev/null 2>&1; then
-    echo "llama.cpp server PID ${managed_server_pid} did not stop within 30 seconds." >&2
-    exit 1
-  fi
-  rm -f "${PID_FILE}"
-elif [[ -f "${PID_FILE}" ]]; then
-  rm -f "${PID_FILE}"
 fi
 
 server_args=(
