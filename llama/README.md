@@ -61,10 +61,8 @@ bash llama/test.sh
 
 The benchmark reports baseline, context fill, prefill throughput, generated
 tokens, decode throughput, and total time. It uses llama.cpp's tokenizer API to
-size synthetic filler prompts, then streams repetitions of the benchmark
-sentence to the terminal as they arrive. A llama.cpp grammar keeps the output
-to that sentence, up to `NUM_PREDICT` tokens at each configured context
-checkpoint.
+size synthetic filler prompts, then streams generated text to the terminal as
+it arrives, up to `NUM_PREDICT` tokens at each configured context checkpoint.
 
 `--n-gpu-layers all` requests all model layers on GPU, and `--split-mode layer`
 allows llama.cpp to distribute them across visible GPUs. This does not guarantee
