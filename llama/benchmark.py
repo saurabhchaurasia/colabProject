@@ -53,6 +53,11 @@ REPEAT_PENALTY = float(os.environ.get("REPEAT_PENALTY", "1.0"))
 BASE_URL = f"http://{SERVER_HOST}:{SERVER_PORT}"
 REQUEST_TIMEOUT = 3600
 CALIBRATION_ATTEMPTS = 6
+OUTPUT_SENTENCE = "This is neutral benchmark context used to measure inference."
+OUTPUT_GRAMMAR = (
+    "root ::= sentence+\n"
+    f'sentence ::= "{OUTPUT_SENTENCE}" " "\n'
+)
 
 
 def post_json(path, body):
@@ -91,10 +96,10 @@ def tokenize_count(text):
 
 def make_prompt(target_prompt_tokens):
     instruction = (
-        "Continue the benchmark. Generate a neutral, varied continuation. "
-        "The following text is filler and should not be repeated verbatim.\n\n"
+        "Repeat only the exact benchmark sentence below, separated by spaces. "
+        "Do not add any other words.\n\n"
     )
-    filler_unit = "This is neutral benchmark context used to measure inference. "
+    filler_unit = f"{OUTPUT_SENTENCE} "
     chars = max(0, (target_prompt_tokens - len(instruction) // 4) * 4)
     best_prompt = instruction
     best_count = tokenize_count(best_prompt)
@@ -133,6 +138,7 @@ def completion(prompt, num_predict):
                 "min_p": MIN_P,
                 "presence_penalty": PRESENCE_PENALTY,
                 "repeat_penalty": REPEAT_PENALTY,
+                "grammar": OUTPUT_GRAMMAR,
                 "ignore_eos": True,
                 "cache_prompt": False,
                 "stream": True,
