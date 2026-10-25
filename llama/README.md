@@ -1,16 +1,16 @@
-# llama.cpp Qwen3.5 benchmark
+# llama.cpp Qwen3.8 benchmark
 
 This directory sets up and runs a separate CUDA-enabled llama.cpp benchmark for
-Qwen3.5-0.8B. It does not use or change the root Ollama configuration.
+Qwen3.8-27B. It does not use or change the root Ollama configuration.
 
 ## Setup
 
 Set `PROFILE=base` or `PROFILE=dual` in `.env` to select a configuration;
 `env.sh` selects the corresponding `BASE_` or `DUAL_` values from `.env`.
-`base` uses the Q5_K_XL GGUF from
-`unsloth/Qwen3.5-0.8B-GGUF`, requests all model layers on visible GPUs, and uses
-the f16 KV cache. `dual` selects the Qwen3.8-27B Q5_K_XL dual-GPU settings
-described below. Edit the prefixed values in `.env` to customize a profile;
+Both profiles use the same Qwen3.8-27B Q5_K_XL model, context size, f16 KV
+cache, sampler, reasoning, and draft-MTP settings. `base` requests all model
+layers on one GPU; `dual` distributes them across two GPUs with tensor
+splitting. Edit the prefixed values in `.env` to customize a profile;
 environment variables can override the selected values.
 
 Run setup from the repository root or this directory:
@@ -77,13 +77,13 @@ server, sampling, and operating system is still expected.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `PROFILE` | `base` | Selects `base` (Qwen3.5-0.8B) or `dual` (Qwen3.8-27B dual-GPU). |
-| `MODEL_REPO` | `unsloth/Qwen3.5-0.8B-GGUF` | Hugging Face repository containing the GGUF. |
-| `MODEL_FILE` | `Qwen3.5-0.8B-UD-Q5_K_XL.gguf` | GGUF file to download and run. |
-| `MODEL_DIR` | `models` | Model download directory, relative to this folder. |
+| `PROFILE` | `base` | Selects the single-GPU `base` or two-GPU `dual` profile. |
+| `MODEL_REPO` | `unsloth/Qwen3.8-27B-GGUF` | Hugging Face repository containing the GGUF. |
+| `MODEL_FILE` | `Qwen3.8-27B-UD-Q5_K_XL.gguf` | GGUF file to download and run. |
+| `MODEL_DIR` | `models` | Model download directory, relative to this folder; the `dual` profile uses `models/Qwen3.8-27B`. |
 | `SERVER_HOST` | `127.0.0.1` | Local llama.cpp server bind address. |
 | `SERVER_PORT` | `8150` | Local llama.cpp server port. |
-| `CONTEXT_SIZE` | `120000` | Context size requested for the server. Qwen3.5-0.8B has a native 262,144-token context, but hardware memory may limit usable size. |
+| `CONTEXT_SIZE` | `131072` | Context size requested for the server; available GPU memory may limit usable size. |
 | `GPU_LAYERS` | `all` | Model layers to offload; `all` requests full offload. |
 | `KV_CACHE_TYPE` | `f16` | KV-cache type for both keys and values (`f16`, `q8_0`, or `q4_0`). |
 | `CUDA_VERSION` | `12.8` | CUDA version variant to download from the latest official llama.cpp nightly release. |
@@ -109,10 +109,10 @@ bash llama/test.sh
 ```
 
 The profile downloads `Qwen3.8-27B-UD-Q5_K_XL.gguf` from
-`unsloth/Qwen3.8-27B-GGUF`, uses port 8081, 131,072 context, tensor splitting
-at `50,50`, f16 KV cache, the specified sampler values, Jinja and reasoning,
-and draft-MTP settings. The sample's Q6 label does not match the requested
-`UD-Q5_K_XL` file, so this profile uses the Q5_K_XL quantization.
+`unsloth/Qwen3.8-27B-GGUF`, uses port 8150, a 131,072-token context, tensor
+splitting at `50,50`, and f16 KV cache. Its sampler, reasoning, and draft-MTP
+settings match the `base` profile so the benchmark workload is comparable;
+GPU layer and split settings remain specific to the hardware.
 
 The profile requires two visible GPUs and exactly one tensor-split weight per
 GPU. `sanity.sh` checks this before downloading the large model. Verify
