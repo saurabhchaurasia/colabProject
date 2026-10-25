@@ -35,10 +35,11 @@ Warm up the model with a short chat-formatted greeting before benchmarking:
 bash llama/sanity.sh
 ```
 
-`sanity.sh` loads the selected profile, invokes `load3.sh` to ensure llama.cpp
-is installed, downloads the configured GGUF if needed, validates the GPU
-configuration, and starts the server if it is not already healthy. It then
-sends a chat-formatted greeting with Qwen thinking disabled and prints its
+Run `load3.sh` once first to pull the project and install llama.cpp
+prerequisites. `sanity.sh` does not pull the repository or rerun setup; it
+loads the selected profile, downloads the configured GGUF if needed, validates
+the GPU configuration, and starts the server if it is not already healthy. It
+then sends a chat-formatted greeting with Qwen thinking disabled and prints its
 response and timing. It allows up to 128 generated tokens and does not run the
 context benchmark. If a healthy managed server is already running, it reuses
 it without downloading the model again. Stop the server before running sanity
@@ -60,8 +61,10 @@ bash llama/test.sh
 
 The benchmark reports baseline, context fill, prefill throughput, generated
 tokens, decode throughput, and total time. It uses llama.cpp's tokenizer API to
-size synthetic filler prompts, then streams generated text to the terminal as
-it arrives, up to `NUM_PREDICT` tokens at each configured context checkpoint.
+size synthetic filler prompts, then streams repetitions of the benchmark
+sentence to the terminal as they arrive. A llama.cpp grammar keeps the output
+to that sentence, up to `NUM_PREDICT` tokens at each configured context
+checkpoint.
 
 `--n-gpu-layers all` requests all model layers on GPU, and `--split-mode layer`
 allows llama.cpp to distribute them across visible GPUs. This does not guarantee

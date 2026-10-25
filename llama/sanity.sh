@@ -5,8 +5,6 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/env.sh"
 load_llama_env "${SCRIPT_DIR}/.env"
 
-bash "${SCRIPT_DIR}/load3.sh"
-
 CONTEXT_SIZE="${CONTEXT_SIZE:-120000}"
 SERVER_HOST="${SERVER_HOST:-127.0.0.1}"
 SERVER_PORT="${SERVER_PORT:-8150}"
@@ -31,14 +29,10 @@ SPEC_DRAFT_P_MIN="${SPEC_DRAFT_P_MIN:-0.0}"
 SPEC_DRAFT_N_MAX="${SPEC_DRAFT_N_MAX:-3}"
 REASONING="${REASONING:-auto}"
 MODEL_PATH="${SCRIPT_DIR}/${MODEL_DIR}/${MODEL_FILE}"
-DEFAULT_LLAMA_HOME="${XDG_CACHE_HOME:-${HOME:-/tmp}/.cache}/colabProject/llama"
 if [[ -n "${LLAMA_HOME:-}" ]]; then
   APP_DIR="${LLAMA_HOME}"
-elif [[ -x "${SCRIPT_DIR}/llama-prebuilt/llama-server" ]] ||
-    [[ ! -x "${DEFAULT_LLAMA_HOME}/llama-prebuilt/llama-server" ]]; then
-  APP_DIR="${SCRIPT_DIR}"
 else
-  APP_DIR="${DEFAULT_LLAMA_HOME}"
+  APP_DIR="${COLAB_PROJECT_DIR:-/workspace/colabProject}/llama"
 fi
 INSTALL_DIR="${APP_DIR}/llama-prebuilt"
 SERVER_BIN="$(find "${INSTALL_DIR}" -type f -name llama-server -executable -print -quit 2>/dev/null || true)"
@@ -95,7 +89,7 @@ if [[ ! "${SPEC_DRAFT_P_MIN}" =~ ^(0([.][0-9]+)?|1([.]0+)?)$ ]]; then
   exit 1
 fi
 if [[ ! -x "${SERVER_BIN:-}" ]]; then
-  echo "llama-server was not found; run load3.sh to install it." >&2
+  echo "llama-server was not found at ${INSTALL_DIR}; run load3.sh first to install prerequisites." >&2
   exit 1
 fi
 
